@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Order Dashboard</title>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-_2I2vTiLUw44ozKxYYHIhOP4RFpiVmI",
+            authDomain: "yookstore-72469.firebaseapp.com",
+            databaseURL: "https://yookstore-72469-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "yookstore-72469",
+            storageBucket: "yookstore-72469.firebasestorage.app",
+            messagingSenderId: "568428801690",
+            appId: "1:568428801690:web:bfcf4c1cee2a5cd9cbb923",
+            measurementId: "G-6202QTH0TL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        function fetchOrders() {
+            const ordersRef = ref(database, "orders");
+            onValue(ordersRef, (snapshot) => {
+                const ordersTable = document.getElementById("orders-table");
+                ordersTable.innerHTML = "";
+                snapshot.forEach((childSnapshot) => {
+                    const order = childSnapshot.val();
+                    let row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td class="p-3">${order.receiver}</td>
+                        <td class="p-3">${order.email || "N/A"}</td>
+                        <td class="p-3">${order.address}</td>
+                        <td class="p-3">${order.contact}</td>
+                        <td class="p-3 font-bold">₹${order.total || "N/A"}</td>
+                        <td class="p-3">${order.status || "Pending"}</td>
+                        <td class="p-3">
+                            <button onclick="deleteOrder('${childSnapshot.key}')" class="bg-red-500 text-white px-3 py-1 rounded">❌</button>
+                        </td>
+                    `;
+                    ordersTable.appendChild(row);
+                });
+            });
+        }
+
+        window.deleteOrder = function(orderId) {
+            const orderRef = ref(database, `orders/${orderId}`);
+            remove(orderRef).then(() => {
+                alert("Order deleted!");
+                fetchOrders();
+            });
+        };
+
+        document.addEventListener("DOMContentLoaded", fetchOrders);
+    </script>
+</head>
+<body class="bg-gray-100 flex justify-center items-center h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-4xl">
+        <h2 class="text-2xl font-bold mb-4">Order Dashboard 📦</h2>
+        <table class="w-full border-collapse border border-gray-300">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="p-3 border">Receiver</th>
+                    <th class="p-3 border">Email</th>
+                    <th class="p-3 border">Address</th>
+                    <th class="p-3 border">Contact</th>
+                    <th class="p-3 border">Total</th>
+                    <th class="p-3 border">Status</th>
+                    <th class="p-3 border">Action</th>
+                </tr>
+            </thead>
+            <tbody id="orders-table">
+                <!-- Orders will be populated here -->
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
